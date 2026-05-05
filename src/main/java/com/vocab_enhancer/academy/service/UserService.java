@@ -1,5 +1,6 @@
 package com.vocab_enhancer.academy.service;
 
+import com.vocab_enhancer.academy.exceptions.ResourceNotFoundException;
 import com.vocab_enhancer.academy.model.dto.userDto.*;
 import com.vocab_enhancer.academy.model.entity.User;
 import com.vocab_enhancer.academy.repository.UserRepository;
@@ -16,14 +17,14 @@ public class UserService {
     private final UserRepository userRepository;
 
     public List<UserResponse> getAll() {
-        return  userRepository.findAll().stream()
+        return userRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public UserResponse getById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
         return toResponse(user);
     }
@@ -31,7 +32,7 @@ public class UserService {
     private UserResponse toResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
-                .nome(user.getName())
+                .name(user.getName())
                 .email(user.getEmail())
                 .build();
     }

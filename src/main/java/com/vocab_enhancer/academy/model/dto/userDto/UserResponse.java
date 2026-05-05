@@ -1,14 +1,13 @@
 package com.vocab_enhancer.academy.model.dto.userDto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 public class UserResponse {
     private long id;
-    private String nome;
+    private String name;
     private String email;
 }
