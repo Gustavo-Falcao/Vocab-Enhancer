@@ -1,13 +1,12 @@
 package com.vocab_enhancer.academy.service;
 
+import com.vocab_enhancer.academy.exceptions.EmailAlreadyExistsException;
 import com.vocab_enhancer.academy.exceptions.ResourceNotFoundException;
 import com.vocab_enhancer.academy.model.dto.userDto.*;
 import com.vocab_enhancer.academy.model.entity.User;
 import com.vocab_enhancer.academy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,10 +22,16 @@ public class UserService {
     }
 
     public UserResponse getById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
+        return toResponse(findById(id));
+    }
 
-        return toResponse(user);
+    private User findById(long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
+    }
+
+    public void delete(long id) {
+        userRepository.delete(findById(id));
     }
 
     private UserResponse toResponse(User user) {
@@ -37,7 +42,21 @@ public class UserService {
                 .build();
     }
 
+    private boolean emailAlreadyExistsInUsers(String email) {
+        return userRepository.findAll().stream()
+                .anyMatch(user -> user.getEmail().equals(email));
+    }
+
+    private boolean emailAlreadyExistsInUsers(String email, long id) {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getId() != id)
+                .anyMatch(user -> user.getEmail().equals(email));
+    }
+
     public UserResponse add(UserCreateRequest userCreateRequest) {
+        if(emailAlreadyExistsInUsers(userCreateRequest.email()))
+            throw new EmailAlreadyExistsException("email já cadastrado");
+
         User user = User.builder()
                 .name(userCreateRequest.name())
                 .email(userCreateRequest.email())
@@ -49,5 +68,19 @@ public class UserService {
         return toResponse(user);
     }
 
+    public void update(long id, UserUpdateRequest userUpdateRequest) {
+        User user = findById(id);
+
+        if(emailAlreadyExistsInUsers(userUpdateRequest.email(), id))
+            throw new EmailAlreadyExistsException("email já cadastrado");
+
+        if(!userUpdateRequest.name().isBlank())
+            user.setName(userUpdateRequest.name());
+
+        if(!userUpdateRequest.email().isBlank())
+            user.setEmail(userUpdateRequest.email());
+
+        userRepository.save(user);
+    }
 
 }
