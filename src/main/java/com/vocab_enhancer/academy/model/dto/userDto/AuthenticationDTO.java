@@ -1,13 +1,10 @@
 package com.vocab_enhancer.academy.model.dto.userDto;
 
-import com.vocab_enhancer.academy.model.entity.user.UserRole;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
-public record UserCreateRequest (
-        @NotBlank(message = "Nome é obrigatório")
-        @Size(min = 3, max = 100, message = ("Nome deve ter entre 3 a 100 letras"))
-        String name,
-
+public record AuthenticationDTO(
         @NotBlank(message = "Email é obrigatório")
         @Email(message = "E-mail inválido")
         String email,
@@ -17,10 +14,6 @@ public record UserCreateRequest (
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)\\S{8,50}$",
                 message = "Senha deve conter pelo menos 1 letra minúscula, 1 letra maiúscula, 1 dígito e ter entre 8 e 50 caracteres, sem espaços em branco."
         )
-        String password,
-
-        @NotNull(message = "A role é obrigatória")
-        UserRole role
-)
-{
+        String password
+) {
 }

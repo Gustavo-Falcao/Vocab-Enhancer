@@ -3,6 +3,8 @@ package com.vocab_enhancer.academy.exceptions;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -58,5 +60,28 @@ public class GlobalExceptionHandler {
         });
 
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> hendleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(400)
+                .error("JSON inválido ou campo com valor não permitido.")
+                .path(request.getRequestURI())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredential(BadCredentialsException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .message("Email ou senha inválidos.")
+                .path(request.getRequestURI())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 }

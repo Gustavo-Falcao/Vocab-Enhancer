@@ -3,9 +3,10 @@ package com.vocab_enhancer.academy.service;
 import com.vocab_enhancer.academy.exceptions.EmailAlreadyExistsException;
 import com.vocab_enhancer.academy.exceptions.ResourceNotFoundException;
 import com.vocab_enhancer.academy.model.dto.userDto.*;
-import com.vocab_enhancer.academy.model.entity.User;
+import com.vocab_enhancer.academy.model.entity.user.User;
 import com.vocab_enhancer.academy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
 
     public List<UserResponse> getAll() {
         return userRepository.findAll().stream()
@@ -39,6 +42,16 @@ public class UserService {
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .userRole(user.getRole())
+                .build();
+    }
+
+    private User toEntity(UserCreateRequest userCreateRequest, String hashPassword) {
+        return User.builder()
+                .name(userCreateRequest.name())
+                .email(userCreateRequest.email())
+                .hashPassword(hashPassword)
+                .role(userCreateRequest.role())
                 .build();
     }
 
@@ -54,33 +67,36 @@ public class UserService {
     }
 
     public UserResponse add(UserCreateRequest userCreateRequest) {
-        if(emailAlreadyExistsInUsers(userCreateRequest.email()))
+        if(emailAlreadyExistsInUsers(userCreateRequest.email().trim()))
             throw new EmailAlreadyExistsException("email já cadastrado");
 
-        User user = User.builder()
-                .name(userCreateRequest.name())
-                .email(userCreateRequest.email())
-                .hashPassword(userCreateRequest.password())
-                .build();
+        String hashPassword = passwordEncoder.encode(userCreateRequest.password());
+
+        User user = toEntity(userCreateRequest, hashPassword);
 
         userRepository.save(user);
 
         return toResponse(user);
     }
 
-    public void update(long id, UserUpdateRequest userUpdateRequest) {
+    public UserResponse update(long id, UserUpdateRequest userUpdateRequest) {
         User user = findById(id);
 
-        if(emailAlreadyExistsInUsers(userUpdateRequest.email(), id))
-            throw new EmailAlreadyExistsException("email já cadastrado");
+        if(userUpdateRequest.email() != null && !userUpdateRequest.email().isBlank()) {
+            String emailUpdate = userUpdateRequest.email().trim();
 
-        if(!userUpdateRequest.name().isBlank())
-            user.setName(userUpdateRequest.name());
+            if(emailAlreadyExistsInUsers(emailUpdate, id))
+                throw new EmailAlreadyExistsException("email já cadastrado");
 
-        if(!userUpdateRequest.email().isBlank())
-            user.setEmail(userUpdateRequest.email());
+            user.setEmail(emailUpdate);
+        }
+
+        if(userUpdateRequest.name() != null && !userUpdateRequest.name().isBlank())
+            user.setName(userUpdateRequest.name().trim());
 
         userRepository.save(user);
+
+        return toResponse(user);
     }
 
 }

@@ -28,7 +28,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> addUser(@Valid @RequestBody UserCreateRequest userCreateRequest) {
+    public ResponseEntity<UserResponse> addUser(@RequestBody @Valid UserCreateRequest userCreateRequest) {
         return new ResponseEntity<>(userService.add(userCreateRequest), HttpStatus.CREATED);
     }
 
@@ -39,9 +39,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateUser(@PathVariable long id, @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
-        userService.update(id, userUpdateRequest);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<UserResponse> updateUser(@PathVariable long id, @RequestBody @Valid UserUpdateRequest userUpdateRequest) {
+        return new ResponseEntity<>(userService.update(id, userUpdateRequest), HttpStatus.OK);
     }
 
 }
