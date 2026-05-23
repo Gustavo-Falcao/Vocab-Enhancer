@@ -1,4 +1,4 @@
-package com.vocab_enhancer.academy.config;
+package com.vocab_enhancer.academy.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
